@@ -125,6 +125,11 @@
 
 <div id="patchBox" class="credits-box">
     <h2>Patch Notes</h2>
+        <p><strong>May 2026 - UPD 2.30</strong></p>
+    <ul>
+        <li>Void Theme Back!</li>
+        <li>Achivments Delayed Once Again</li>
+    </ul>
 <p><strong>July 2026 - UPD 2.25 (Error 404)</strong></p>
     <ul>
         <li>Achievements Added</li>
@@ -133,12 +138,6 @@
         <li>WAIT TO FIND OUT MORE</li>
     </ul>
        <hr>
-    <p><strong>December 2025 - UPD 2.20</strong></p>
-    <ul>
-        <li>Daily Quests</li>
-        <li>Offline Progress</li>
-        <li>Average CPS Display</li>
-    </ul>
     <button onclick="closeAllModals()">Close</button>
 </div>
 
@@ -330,7 +329,7 @@ function showPatch(){overlay.style.display="block"; patchBox.style.display="bloc
 function showStats(){overlay.style.display="block"; statsBox.style.display="block";
     statsContent.innerHTML=`Total Clicks: ${totalClicks}<br>Rebirths: ${rebirths}<br>Crits: ${critsTriggered}<br>Premium Coins: ${prestigePoints}`;}
 function closeAllModals(){overlay.style.display="none"; document.querySelectorAll(".credits-box").forEach(b=>b.style.display="none");}
-function showAchievementsMenu(){showNotification("In UPD 2.25 (Error 404 Update)");}
+function showAchievementsMenu(){showNotification("In UPD 2.35 (Probably some bug fixes tbh.)");}
 
 /* ===== SAVE ===== */
 function saveData(){
