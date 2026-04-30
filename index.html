@@ -11,13 +11,13 @@
       background-color: #0a0a0a; /* Deep "void" black */
       color: white;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      overflow: hidden; /* Prevents scrollbars on the main menu */
+      overflow: hidden; 
     }
 
     /* 2. Menu Container */
     .container {
       display: flex;
-      flex-direction: column; /* Stack buttons vertically */
+      flex-direction: column; 
       align-items: center;
       justify-content: flex-start;
       height: 100vh;
@@ -42,16 +42,16 @@
     }
 
     .play-btn {
-      margin-top: 75vh; /* Initial requirement */
+      margin-top: 70vh; /* Adjusted slightly for better visibility */
     }
 
     .credits-btn {
-      margin-top: 20px; /* Space below Play button */
+      margin-top: 20px; 
     }
 
     /* 4. Overlay & Fade Animation */
     .overlay {
-      display: none; /* Controlled by JS */
+      display: none; 
       position: fixed;
       top: 0;
       left: 0;
@@ -61,13 +61,11 @@
       z-index: 100;
     }
 
-    /* The Fade-In Animation */
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
     }
 
-    /* Applied when the overlay is shown */
     .overlay.active {
       display: flex;
       flex-direction: column;
@@ -106,7 +104,8 @@
 
   <!-- Main Menu -->
   <div class="container">
-    <button class="my-button play-btn" onclick="location.href='./void.html">Play</button>
+    <!-- Added missing closing quote to onclick -->
+    <button class="my-button play-btn" onclick="location.href='./void.html'">Play</button>
     <button class="my-button credits-btn" onclick="toggleCredits(true)">Credits</button>
   </div>
 
@@ -115,9 +114,11 @@
     <div class="overlay-content">
       <h1>CREDITS</h1>
       <p>Quantum — Developer</p>
-      <p>RXL — Game Tester<p>
+      <!-- Fixed unclosed p tag -->
+      <p>RXL — Game Tester</p>
       <p>Built with HTML, CSS, and JS</p>
-      <button class="close-btn" onclick="toggleCredits(false)">Closebutton>
+      <!-- Fixed Close button text and closing tag -->
+      <button class="close-btn" onclick="toggleCredits(false)">Close</button>
     </div>
   </div>
 
