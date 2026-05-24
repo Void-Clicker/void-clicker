@@ -70,6 +70,7 @@
             cursor:pointer;
             font-size:1rem;
             box-sizing: border-box;
+            margin-top: 15px;
         }
         .credits-box button:hover { background:#ff4c4c; }
         .shop { 
@@ -87,6 +88,35 @@
         #achievementPopup { position:fixed; bottom:20px; right:20px; z-index:2000; }
         .achievement-message { background:#8A2BE2; color:black; padding:10px; border-radius:8px; margin-top:8px; font-weight:bold; }
         #avgCPS { position:fixed; top:10px; right:10px; background:rgba(0,0,0,0.7); border:2px solid #8A2BE2; padding:8px 12px; border-radius:8px; z-index:3000; }
+        
+        /* Blitz Wager Arena Circle Graphics */
+        .bet-btn {
+            background: #8A2BE2 !important;
+            color: white !important;
+            font-size: 1.1rem;
+            padding: 10px;
+            margin: 8px 0;
+            border: none;
+            cursor: pointer;
+            border-radius: 6px;
+            width: 100%;
+        }
+        .bet-btn:hover { background: #A040FF !important; }
+        .click-target-circle {
+            font-size: 2rem;
+            font-weight: bold;
+            background: #EFFF00;
+            color: black;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            line-height: 140px;
+            margin: 15px auto;
+            text-align: center;
+            user-select: none;
+            cursor: pointer;
+        }
+        .click-target-circle:active { transform: scale(0.95); }
     </style>
 </head>
 <body>
@@ -104,7 +134,7 @@
         <button onclick="showCredits()">Credits</button>
         <button onclick="showPatch()">Patch Notes</button>
         <button onclick="showQuests()">Daily Quests</button>
-        <button onclick="showAchievementsMenu()">Achievements</button>
+        <button onclick="showWagerMenu()">CPS Blitz</button>
         <button onclick="showStats()">Stats</button>
     </div>
     <div class="sidebar-bottom">
@@ -125,24 +155,17 @@
 
 <div id="patchBox" class="credits-box">
     <h2>Patch Notes</h2>
-<p><strong>??? 2026 - UPD 2.35</strong></p>
+    <p><strong>May 2026 - UPD 2.35</strong></p>
     <ul>
-        <li>Main Menu?</li>
-        <li>Bug Fixes</li></li>
+        <li>Achievements replaced with CPS Blitz wager gamemode!</li>
+        <li>Unified script code architectures</li>
     </ul>
-        <p><strong>May 2026 - UPD 2.30</strong></p>
+    <p><strong>May 2026 - UPD 2.30</strong></p>
     <ul>
         <li>Void Theme Back!</li>
         <li>Achievements Delayed Once Again</li>
     </ul>
-<p><strong>April 2026 - UPD 2.25 (Error 404)</strong></p>
-    <ul>
-        <li>Achievements Added</li>
-        <li>Error 404 Theme replaced Void Theme</li>
-        <li>Display name is "Error 404"</li>
-        <li>WAIT TO FIND OUT MORE</li>
-    </ul>
-       <hr>
+    <hr>
     <button onclick="closeAllModals()">Close</button>
 </div>
 
@@ -158,11 +181,25 @@
     <button onclick="closeAllModals()">Close</button>
 </div>
 
+<div id="wagerBox" class="credits-box">
+    <h2 style="color: #EFFF00; text-align: center; margin-top: 0;">⚡ CPS BLITZ ⚡</h2>
+    <div id="wagerLobby">
+        <p style="text-align: center;">Wager currency to beat an AI opponent in 10 seconds!</p>
+        <button class="bet-btn" onclick="runWager('clicks', 3000)">Bet 3,000 Clicks</button>
+        <button class="bet-btn" onclick="runWager('coins', 10)">Bet 10 Premium Coins</button>
+    </div>
+    <div id="wagerMatch" style="display:none; text-align: center;">
+        <h3 id="wagerTimer" style="color:crimson; font-size: 1.5rem; margin: 5px 0;">Time Left: 10s</h3>
+        <div class="click-target-circle" onclick="scoreWagerClick()">CLICK!</div>
+        <p style="font-size: 1.1rem;">Your Clicks: <span id="wagerClicksCount" style="color:#EFFF00; font-weight:bold;">0</span></p>
+    </div>
+    <button onclick="closeAllModals()" style="margin-top:10px;">Close Menu</button>
+</div>
+
 <div id="achievementPopup"></div>
 <div id="avgCPS">Avg CPS: 0.00</div>
-
 <script>
-/* ===== ELEMENTS ===== */
+/* ===== CORE SYSTEM VARIABLES ===== */
 const overlay = document.getElementById("overlay");
 const questsBox = document.getElementById("questsBox");
 const questsContent = document.getElementById("questsContent");
@@ -173,8 +210,8 @@ const achievementPopup = document.getElementById("achievementPopup");
 const creditsBox = document.getElementById("creditsBox");
 const patchBox = document.getElementById("patchBox");
 const shopDiv = document.querySelector(".shop");
+const wagerBox = document.getElementById("wagerBox");
 
-/* ===== VARIABLES ===== */
 let x = +localStorage.getItem("x") || 0;
 let clickPower = +localStorage.getItem("clickPower") || 1;
 let rebirths = +localStorage.getItem("rebirths") || 0;
@@ -188,7 +225,7 @@ let critsTriggered = +localStorage.getItem("critsTriggered") || 0;
 let startTime = +localStorage.getItem("startTime") || Date.now();
 let lastOnline = +localStorage.getItem("lastOnline") || Date.now();
 
-/* ===== DISPLAY ===== */
+/* ===== UTILITIES ===== */
 function updateDisplay(){
     document.getElementById("idk").innerText = "Clicks: " + Math.floor(x);
     document.getElementById("rebirthCounter").innerText = "Rebirths: " + rebirths;
@@ -196,14 +233,19 @@ function updateDisplay(){
     updateAvgCPS();
 }
 
-/* ===== AVG CPS ===== */
 function updateAvgCPS(){
     const seconds = Math.max(1, Math.floor((Date.now()-startTime)/1000));
     avgCPS.innerText = `Avg CPS: ${(totalClicks/seconds).toFixed(2)}`;
 }
 
-/* ===== SHOP ===== */
+/* ===== SHOP CALCULATIONS ===== */
 const buttonPowers = [1,5,10,15,20,25,30,35,40,45,50];
+const premiumUpgrades = [
+    { name: "+1 Click Power", type: "clickPower", value: 1 },
+    { name: "+5 Click Power", type: "clickPower", value: 5 },
+    { name: "Auto Clicker +1", type: "autoClicker", value: 1 }
+];
+
 function renderShop(){
     shopDiv.innerHTML="<h2>Shop</h2>";
     buttonPowers.forEach((power,index)=>{
@@ -218,17 +260,11 @@ function renderShop(){
         const premiumHeader = document.createElement("h3");
         premiumHeader.innerText="Premium Shop";
         shopDiv.appendChild(premiumHeader);
-        const premiumUpgrades=[
-            {name:"+1 Click Power", type:"clickPower", value:1},
-            {name:"+5 Click Power", type:"clickPower", value:5},
-            {name:"Auto Clicker +1", type:"autoClicker", value:1},
-            {name:"Auto Clicker +2", type:"autoClicker", value:2},
-            {name:"+1% Critical Chance", type:"crit", value:0.01},
-        ];
+        
         premiumUpgrades.forEach(upg=>{
             const btn=document.createElement("div");
             btn.className="shop-item";
-            btn.innerText=`${upg.name} (Cost:1 PP)`;
+            btn.innerText=`${upg.name} (Cost: 1 PP)`;
             btn.onclick=()=>{
                 if(prestigePoints>=1){
                     prestigePoints--; 
@@ -242,8 +278,7 @@ function renderShop(){
         });
     }
 }
-
-/* ===== CLICK ===== */
+/* ===== GAME CORE LOGIC ===== */
 function clickHandler(){
     let gain = clickPower*rebirthMultiplier;
     if(Math.random()<critChance) gain*=3, critsTriggered++;
@@ -252,7 +287,6 @@ function clickHandler(){
     saveData(); updateDisplay();
 }
 
-/* ===== REBIRTH ===== */
 function rebirth(){
     if(x>=1000){
         rebirths++; prestigePoints++;
@@ -263,7 +297,6 @@ function rebirth(){
     }
 }
 
-/* ===== DAILY REWARD ===== */
 function claimDaily(){
     const now=Date.now();
     if(now-lastDaily>=86400000){
@@ -273,6 +306,7 @@ function claimDaily(){
         showNotification(`Daily claimed: +${reward} clicks`);
     } else showNotification("Daily not ready!");
 }
+
 function updateDailyTimer(){
     const now = Date.now();
     let remain = Math.max(0, 86400000-(now-lastDaily));
@@ -281,7 +315,6 @@ function updateDailyTimer(){
 }
 setInterval(updateDailyTimer,1000);
 
-/* ===== NOTIFICATIONS ===== */
 function showNotification(msg){
     const popup=document.createElement("div");
     popup.className="achievement-message"; popup.innerText=msg;
@@ -309,8 +342,9 @@ function generateDailyQuests(){
         lastQuestDay=today; saveData();
     }
 }
+
 function showQuests(){
-    generateDailyQuests(); overlay.style.display="block"; questsBox.style.display="block";
+    generateDailyQuests(); closeAllModals(); overlay.style.display="block"; questsBox.style.display="block";
     questsContent.innerHTML="";
     dailyQuests.forEach((q,i)=>{
         questsContent.innerHTML += `<p><strong>${q.description}</strong></p>
@@ -319,6 +353,7 @@ function showQuests(){
         <button onclick="claimQuest(${i})" ${dailyQuestsClaimed[i]?'disabled':''}>${dailyQuestsClaimed[i]?'Claimed':'Claim'}</button><hr>`;
     });
 }
+
 function claimQuest(i){
     const q=dailyQuests[i];
     if(q.progress>=q.goal && !dailyQuestsClaimed[i]){
@@ -328,15 +363,83 @@ function claimQuest(i){
     }
 }
 
-/* ===== MODALS ===== */
-function showCredits(){overlay.style.display="block"; creditsBox.style.display="block";}
-function showPatch(){overlay.style.display="block"; patchBox.style.display="block";}
-function showStats(){overlay.style.display="block"; statsBox.style.display="block";
-    statsContent.innerHTML=`Total Clicks: ${totalClicks}<br>Rebirths: ${rebirths}<br>Crits: ${critsTriggered}<br>Premium Coins: ${prestigePoints}`;}
-function closeAllModals(){overlay.style.display="none"; document.querySelectorAll(".credits-box").forEach(b=>b.style.display="none");}
-function showAchievementsMenu(){showNotification("In UPD 2.35 (Probably some bug fixes tbh.)");}
+/* ===== BLITZ COMPETITION ENGINE ===== */
+let blitzActive = false;
+let blitzClicks = 0;
+let blitzTimeLeft = 10;
+let blitzTimer;
 
-/* ===== SAVE ===== */
+function showWagerMenu() { 
+    closeAllModals(); 
+    overlay.style.display = "block"; 
+    wagerBox.style.display = "block"; 
+    document.getElementById("wagerLobby").style.display = "block";
+    document.getElementById("wagerMatch").style.display = "none";
+}
+
+function runWager(type, cost) {
+    if (type === 'clicks' && x < cost) return showNotification("You need 3,000 clicks to make this bet!");
+    if (type === 'coins' && prestigePoints < cost) return showNotification("You need 10 Premium Coins to make this bet!");
+
+    if (type === 'clicks') { x -= cost; } else { prestigePoints -= cost; }
+    saveData();
+    updateDisplay();
+
+    document.getElementById("wagerLobby").style.display = "none";
+    document.getElementById("wagerMatch").style.display = "block";
+
+    blitzActive = true;
+    blitzClicks = 0;
+    blitzTimeLeft = 10;
+    document.getElementById("wagerClicksCount").innerText = blitzClicks;
+    document.getElementById("wagerTimer").innerText = `Time Left: ${blitzTimeLeft}s`;
+
+    blitzTimer = setInterval(() => {
+        blitzTimeLeft--;
+        document.getElementById("wagerTimer").innerText = `Time Left: ${blitzTimeLeft}s`;
+        if (blitzTimeLeft <= 0) {
+            clearInterval(blitzTimer);
+            blitzActive = false;
+            evalWagerResult(type, cost);
+        }
+    }, 1000);
+}
+
+function scoreWagerClick() {
+    if (!blitzActive) return;
+    blitzClicks++;
+    document.getElementById("wagerClicksCount").innerText = blitzClicks;
+}
+
+function evalWagerResult(type, cost) {
+    let pCPS = (blitzClicks / 10).toFixed(1);
+    let oCPS = (Math.random() * 4 + 4).toFixed(1); 
+    let oClicks = Math.round(oCPS * 10);
+
+    alert(`Match complete!\n\nYou: ${blitzClicks} clicks (${pCPS} CPS)\nOpponent: ${oClicks} clicks (${oCPS} CPS)`);
+
+    if (parseFloat(pCPS) > parseFloat(oCPS)) {
+        showNotification(`🏆 You Win! +${cost * 2} ${type === 'clicks' ? 'clicks' : 'PP'}`);
+        if (type === 'clicks') { x += cost * 2; totalClicks += cost * 2; dailyQuests.forEach(q=>q.progress += cost * 2); } else { prestigePoints += cost * 2; }
+    } else if (parseFloat(pCPS) === parseFloat(oCPS)) {
+        showNotification("👔 Tie match! Stake returned.");
+        if (type === 'clicks') { x += cost; } else { prestigePoints += cost; }
+    } else {
+        showNotification("❌ Loss! Better speed next time.");
+    }
+    saveData();
+    updateDisplay();
+    showWagerMenu();
+}
+
+/* ===== WINDOW VIEW MODALS ===== */
+function showCredits(){ closeAllModals(); overlay.style.display="block"; creditsBox.style.display="block";}
+function showPatch(){ closeAllModals(); overlay.style.display="block"; patchBox.style.display="block";}
+function showStats(){ closeAllModals(); overlay.style.display="block"; statsBox.style.display="block";
+    statsContent.innerHTML=`Total Clicks: ${totalClicks}<br>Rebirths: ${rebirths}<br>Crits: ${critsTriggered}<br>Premium Coins: ${prestigePoints}`;}
+function closeAllModals(){ overlay.style.display="none"; document.querySelectorAll(".credits-box").forEach(b=>b.style.display="none");}
+
+/* ===== STORAGE DATA TRUCKS ===== */
 function saveData(){
     localStorage.setItem("x",x);
     localStorage.setItem("clickPower",clickPower);
@@ -355,7 +458,7 @@ function saveData(){
     localStorage.setItem("lastQuestDay",lastQuestDay);
 }
 
-/* ===== OFFLINE PROGRESS ===== */
+/* ===== OFFLINE PROGRESSION RUNTIME ===== */
 (function(){
     const now = Date.now();
     const seconds = Math.floor((now-lastOnline)/1000);
@@ -363,12 +466,17 @@ function saveData(){
     lastOnline=now; saveData();
 })();
 
-/* ===== INIT ===== */
+setInterval(() => {
+    if (autoClickers > 0) {
+        let gain = autoClickers * rebirthMultiplier;
+        x += gain; totalClicks += gain;
+        dailyQuests.forEach(q => q.progress += gain);
+        updateDisplay();
+    }
+}, 1000);
+
+/* ===== INITIATION TRIGGER ===== */
 renderShop(); updateDisplay(); generateDailyQuests();
 </script>
-
 </body>
 </html>
-
-
-
