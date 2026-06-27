@@ -121,6 +121,8 @@
 </head>
 <body>
 
+<audio id="bg-music" src="The_Script_Has_been_Written.mp3" loop></audio>
+    
 <div class="sidebar">
     <h1>Void Clicker</h1>
     <div id="statsContainer">
@@ -477,6 +479,30 @@ setInterval(() => {
 
 /* ===== INITIATION TRIGGER ===== */
 renderShop(); updateDisplay(); generateDailyQuests();
+
+    // Put this inside your <script> tags at the bottom of your HTML
+
+const music = document.getElementById('bg-music');
+
+// Sets your BandLab loop to a comfortable, non-blasting 40% volume
+music.volume = 0.4;
+
+// Listen for a click anywhere on the webpage body
+document.body.addEventListener('click', () => {
+  // Check if the music hasn't started playing yet
+  if (music.paused) {
+    music.play()
+      .then(() => {
+        // Smoothly changes the text to let them know the loop is active
+        document.querySelector('p').textContent = "Listening to: Glitched Resolve (51s Loop)";
+        document.querySelector('p').style.color = "#00ffcc";
+      })
+      .catch((error) => {
+        console.log("Waiting for user interaction:", error);
+      });
+  }
+});
+
 </script>
 </body>
 </html>
